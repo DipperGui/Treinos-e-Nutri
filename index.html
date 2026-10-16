@@ -1,6 +1,17 @@
-<!doctype html><html><head><link rel="apple-touch-icon" href="image.png"><link rel="icon" href="image.png"><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html>
+<html lang="pt-BR">
+<head>
 <title>Treino e Cardápio</title>
-<meta name="claude:viewport-fit-sides" content="cover">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Treino">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0E8C99">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800&family=Instrument+Sans:wght@400;500;600&display=swap">
 <style>
 /* Layout: uma coluna de app (até 560px). Faixa da semana no topo; painel do dia com abas Treino, Evolução e Cardápio; cartões com toque largo para uso com uma mão. */
@@ -155,9 +166,12 @@ details.vals summary{cursor:pointer;min-height:32px;display:flex;align-items:cen
 .check{flex-direction:row!important;align-items:center;gap:10px!important;font-weight:500!important;color:var(--ink)!important}
 .check input{width:22px;height:22px;accent-color:var(--accent);flex:none}
 .scope{display:flex;flex-direction:column;gap:4px;padding:12px;border-radius:12px;background:var(--surface2)}
+.frow{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
 footer{display:flex;flex-direction:column;align-items:center;gap:8px;font-size:12px;color:var(--muted);text-align:center}
 @media (prefers-reduced-motion:reduce){.fill{transition:none}}
 </style>
+</head>
+<body>
 
 <div class="wrap">
   <header>
@@ -181,7 +195,12 @@ footer{display:flex;flex-direction:column;align-items:center;gap:8px;font-size:1
   <div class="strip" id="strip"></div>
   <main class="panel" id="panel"></main>
   <footer>
-    <button type="button" class="btn small" id="exp" data-act="export" hidden>Exportar dados (CSV)</button>
+    <div class="frow">
+      <button type="button" class="btn small" data-act="bkp">Fazer backup</button>
+      <button type="button" class="btn small" data-act="rst">Restaurar backup</button>
+      <button type="button" class="btn small" id="exp" data-act="export" hidden>Exportar CSV</button>
+    </div>
+    <input type="file" id="rstf" accept=".json,application/json" hidden>
     <div id="status">Carregando…</div>
   </footer>
 </div>
@@ -292,6 +311,11 @@ var store={mode:'local',col:null,
     if(this.mode==='cloud')return this.col.doc(name).set(obj);
     try{localStorage.setItem('treino:'+name,JSON.stringify(obj))}catch(e){return Promise.reject(e)}
     return Promise.resolve()},
+  all:function(){
+    var out={};
+    if(this.mode==='cloud')return this.col.get().then(function(snap){snap.docs.forEach(function(d){out[d.id]=clone(d.data())});return out});
+    try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.indexOf('treino:')===0)out[k.slice(7)]=JSON.parse(localStorage.getItem(k))}}catch(e){}
+    return Promise.resolve(out)},
   weeks:function(){
     var out={};
     if(this.mode==='cloud')return this.col.get().then(function(snap){snap.docs.forEach(function(d){if(d.id.indexOf('w-')===0)out[d.id.slice(2)]=clone(d.data())});return out});
@@ -306,8 +330,8 @@ state.plan.versoes[BASE]=samplePlan();
 var q=Promise.resolve(),lastHist='';
 function setStatus(k){
   var el=document.getElementById('status');
-  var where=store.mode==='cloud'?'Salvo na sua conta do Claude.':'Salvo só neste navegador.';
-  el.textContent=k==='saving'?'Salvando…':k==='err'?'Não foi possível salvar. Tente de novo.':k==='csv'?'Arquivo CSV pronto.':k==='csverr'?'Não foi possível exportar.':(state.planLoaded?where:'Carregando…');
+  var where=store.mode==='cloud'?'Salvo na sua conta do Claude.':'Salvo só neste aparelho. Faça backup de vez em quando.';
+  el.textContent=k==='saving'?'Salvando…':k==='err'?'Não foi possível salvar. Tente de novo.':k==='csv'?'Arquivo CSV pronto.':k==='csverr'?'Não foi possível exportar.':k==='bk'?'Backup pronto. Guarde o arquivo.':k==='bkerr'?'Nada para salvar ou falha no backup.':k==='rsterr'?'Arquivo de backup inválido.':(state.planLoaded?where:'Carregando…');
 }
 function chain(fn){setStatus('saving');q=q.then(fn).then(function(){setStatus('ok')},function(){setStatus('err')});return q}
 var timers={};
@@ -887,6 +911,37 @@ function exportCSV(){
   }).catch(function(e){if(e&&e.code==='declined')return;setStatus('csverr')});
 }
 
+function saveFile(name,text,type){
+  if(state.dl)return state.dl.save({filename:name,data:text});
+  var blob=new Blob([text],{type:type});
+  try{var f=new File([blob],name,{type:type});
+    if(navigator.canShare&&navigator.canShare({files:[f]}))return navigator.share({files:[f]}).catch(function(e){if(e&&e.name==='AbortError')return;throw e})}catch(e){}
+  var u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();
+  setTimeout(function(){URL.revokeObjectURL(u);a.remove()},1500);return Promise.resolve()}
+function backup(){
+  store.all().then(function(d){
+    if(!Object.keys(d).length){setStatus('bkerr');return}
+    var txt=JSON.stringify({app:'treino-e-cardapio',v:1,data:d});
+    return saveFile('backup-treino-'+ymd(new Date())+'.json',txt,'application/json').then(function(){setStatus('bk')});
+  }).catch(function(e){if(e&&(e.code==='declined'))return;setStatus('bkerr')});
+}
+function restoreFile(file){
+  if(!file)return;
+  var rd=new FileReader();
+  rd.onload=function(){
+    var j;try{j=JSON.parse(rd.result)}catch(e){}
+    if(!j||j.app!=='treino-e-cardapio'||!j.data){setStatus('rsterr');return}
+    var names=Object.keys(j.data);
+    if(!confirm('Restaurar '+names.length+' registros? Isso substitui os dados atuais com os mesmos nomes.'))return;
+    var p=Promise.resolve();
+    names.forEach(function(n){p=p.then(function(){return store.set(n,j.data[n])})});
+    p.then(function(){location.reload()},function(){setStatus('rsterr')});
+  };
+  rd.readAsText(file);
+}
+document.getElementById('rstf').addEventListener('change',function(e){restoreFile(e.target.files[0]);e.target.value=''});
+if(navigator.storage&&navigator.storage.persist){try{navigator.storage.persist()}catch(e){}}
+
 document.addEventListener('click',function(e){
   var el=e.target.closest('[data-act]');if(!el)return;
   var a=el.getAttribute('data-act'),dr=state.draft;
@@ -898,6 +953,8 @@ document.addEventListener('click',function(e){
   if(a==='tab'){state.tab=el.getAttribute('data-t');return render()}
   if(a==='hwin'){state.hwin=+el.getAttribute('data-v');return render()}
   if(a==='export')return exportCSV();
+  if(a==='bkp')return backup();
+  if(a==='rst')return document.getElementById('rstf').click();
   if(a==='scale'){
     var wk1=wkey();if(!state.loaded[wk1])return;
     var bb=weekDoc().b,bi=state.sel,qk=el.getAttribute('data-q'),bv=+el.getAttribute('data-v');
@@ -1029,5 +1086,5 @@ store.init().then(function(){
 });
 })();
 </script>
-
-</body></html>
+</body>
+</html>
