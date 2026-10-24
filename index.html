@@ -295,7 +295,7 @@ html[data-mode="edit"][data-theme="dark"] body{--accent:#A7B0BC;--accent-ink:#1B
 @media (prefers-reduced-motion:reduce){.chev{transition:none}}
 
 /* ===== v14: barra de abas flutuante embaixo ===== */
-body{padding-block:20px calc(112px + env(safe-area-inset-bottom,0px))}
+body{padding-block:20px calc(170px + env(safe-area-inset-bottom,0px))}
 .dayhead{grid-template-columns:minmax(0,1fr) auto}
 .bnav{position:fixed;left:50%;transform:translateX(-50%);bottom:max(12px,env(safe-area-inset-bottom,0px));width:min(calc(100% - 24px),520px);z-index:20;display:flex;gap:4px;padding:6px;border-radius:999px;background:var(--surface);border:1px solid var(--line);box-shadow:0 12px 30px -10px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.06)}
 @supports (backdrop-filter:blur(10px)) or (-webkit-backdrop-filter:blur(10px)){.bnav{background:color-mix(in srgb,var(--surface) 86%,transparent);-webkit-backdrop-filter:blur(16px) saturate(1.4);backdrop-filter:blur(16px) saturate(1.4)}}
@@ -309,7 +309,7 @@ body{padding-block:20px calc(112px + env(safe-area-inset-bottom,0px))}
 .bnav button[data-t="evolucao"]{--tb:var(--t-evolucao);--tbs:var(--t-evolucao-soft)}
 .bnav button[data-t="galeria"]{--tb:var(--t-galeria);--tbs:var(--t-galeria-soft)}
 html[data-mode="edit"] .bnav{display:none}
-html[data-mode="edit"] body{padding-bottom:40px}
+html[data-mode="edit"] body{padding-bottom:calc(40px + env(safe-area-inset-bottom,0px))}
 @media (max-width:360px){.bnav button{font-size:10px}.bnav button svg{width:24px;height:24px}}
 
 /* ===== v15: Início concentra cabeçalho, semana e "como foi o dia" ===== */
@@ -392,7 +392,7 @@ html[data-mode="edit"] .wmini{border-top:1.5px dashed var(--line);border-right:1
 html{background:var(--bg);min-height:100%}
 body{min-height:100vh;min-height:100dvh}
 body::before{bottom:-200px}
-body{padding-top:calc(20px + env(safe-area-inset-top,0px));padding-bottom:calc(40px + env(safe-area-inset-bottom,0px))}
+body{padding-top:calc(20px + env(safe-area-inset-top,0px));padding-bottom:calc(170px + env(safe-area-inset-bottom,0px))}
 </style>
 </head>
 <body>
