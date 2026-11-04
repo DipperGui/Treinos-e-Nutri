@@ -1,0 +1,16 @@
+IMAGENS DO MASCOTE (galo)
+
+Coloque aqui arquivos PNG com fundo transparente (512 x 512 recomendado).
+Se um arquivo existir, o app usa a imagem no lugar do desenho padrão.
+Se não existir, o desenho padrão continua sendo usado.
+
+Linha "forte" (musculação): f0.png ... f6.png
+Linha "atlética" (corrida/natação/bike): c0.png ... c6.png
+  (se faltar um c, o app usa o f do mesmo número)
+
+Formas por patente (número = nível):
+  0 Ovo | 1 Pintinho | 2 Pinto crescido | 3 Frango jovem
+  4 Galo (ou Galo corredor) | 5 Galo forte (ou Galo atleta) | 6 Galo campeão (ou Galo olímpico)
+
+Os arquivos ficam na pasta "mascote", ao lado do index.html.
+Observação: os acessórios da loja só aparecem no desenho padrão.
